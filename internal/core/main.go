@@ -12,6 +12,14 @@ import (
 	"github.com/inaneverb/ende/internal/pkg/bw"
 )
 
+type R = io.Reader
+type W = io.Writer
+
+type EnDe interface {
+	Encode(cCtx *cli.Context) error
+	Decode(cCtx *cli.Context) error
+}
+
 // do encapsulate the main preparation job. It parses given arguments
 // from cli.Context, prepares io.Reader, io.Writer to work with input and output
 // and calls 'cb' providing these streams. It uses 'act' to wrap any occurred

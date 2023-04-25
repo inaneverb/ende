@@ -27,7 +27,7 @@ It allows you to work with stdin, stdout, or with a files.
 		Usage:     Usage,
 		UsageText: cmd.UsageText("", ""),
 		Commands: []*cli.Command{
-			cmd.Base64(),
+			cmd.Base64(), cmd.Hex(),
 		},
 		Description: strings.TrimSpace(Description),
 		Flags:       []cli.Flag{},
