@@ -2,20 +2,34 @@ package cmd
 
 import (
 	"fmt"
+
+	"github.com/inaneverb/ende/internal/pkg/version"
 )
 
+func UsageText(encoder, op string) string {
+	const S = version.APP_NAME +
+		" %s %s [<flags>] [IN: <data>|<path> [OUT:<path>]]"
+	if encoder == "" {
+		encoder = "<encoder>"
+	}
+	if op == "" {
+		op = "<op>"
+	}
+	return fmt.Sprintf(S, encoder, op)
+}
+
 func gUsage(name string) string {
-	const S = "perform %s encode/decode operations"
+	const S = "Perform %s encode/decode operations"
 	return fmt.Sprintf(S, name)
 }
 
 func gUsageEnc(name string) string {
-	const S = "perform %s encode operation"
+	const S = "Perform %s encode operation"
 	return fmt.Sprintf(S, name)
 }
 
 func gUsageDec(name string) string {
-	const S = "perform %s decode operation"
+	const S = "Perform %s decode operation"
 	return fmt.Sprintf(S, name)
 }
 
@@ -43,18 +57,20 @@ just use '--' as the 1st arg.
 
 func gDescEnc(name string) string {
 	const S = `
-Encodes either stream data from stdin, data source of given filepath 
-from 1th argument or the 1st argument itself using %s encoder 
-and writes the output to the file, path to which is given as 2nd argument, 
-or to the stdout otherwise.`
+Encodes either stream data from stdin, data source 
+of given filepath from 1th argument or the 1st argument 
+itself using %s encoder and writes the output to the file, 
+path to which is given as 2nd argument, or to the stdout 
+otherwise.`
 	return fmt.Sprintf(S, name)
 }
 
 func gDescDec(name string) string {
 	const S = `
-Decodes either stream data from stdin, data source of given filepath 
-from 1th argument or the 1st argument itself using %s decoder 
-and writes the output to the file, path to which is given as 2nd argument, 
-or to the stdout otherwise.`
+Decodes either stream data from stdin, data source 
+of given filepath from 1th argument or the 1st argument 
+itself using %s decoder and writes the output to the file, 
+path to which is given as 2nd argument, or to the stdout 
+otherwise.`
 	return fmt.Sprintf(S, name)
 }

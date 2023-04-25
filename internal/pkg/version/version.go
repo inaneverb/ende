@@ -9,4 +9,5 @@ const (
 
 var (
 	Commit = ""
+	Date   = ""
 )

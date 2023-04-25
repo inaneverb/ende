@@ -59,15 +59,21 @@ func do(cCtx *cli.Context, act string, cb func(r R, w W) (R, W, error)) error {
 		return fmt.Errorf("%s: %w", act, err)
 	}
 
-	if r1 != r && r1 != nil {
-		if err = cl(r1); err != nil {
-			return fmt.Errorf("%s: failed to close new reader: %w", act, err)
-		}
-	}
-
-	if w1 != w && w1 != nil {
-		if err = cl(w1); err != nil {
-			return fmt.Errorf("%s: failed to close new writer: %w", act, err)
+	for _, elem := range []struct {
+		Obj  any
+		Cond bool
+		What string
+	}{
+		{r, r != os.Stdin, "reader"},
+		{w, w != os.Stdout, "reader"},
+		{r1, r1 != nil && r1 != r, "returned reader"},
+		{w1, w1 != nil && w1 != w, "returned writer"},
+	} {
+		if elem.Cond {
+			if err = cl(elem.Obj); err != nil {
+				const D = "%s: failed to close %s: %w"
+				return fmt.Errorf(D, act, elem.What, err)
+			}
 		}
 	}
 
@@ -80,8 +86,6 @@ func stat(s string) (*os.File, error) {
 
 	var fi, err = os.Stat(s)
 	switch {
-	case errors.Is(err, os.ErrNotExist):
-		return nil, err
 	case errors.Is(err, os.ErrPermission):
 		return nil, err
 	case err != nil:
