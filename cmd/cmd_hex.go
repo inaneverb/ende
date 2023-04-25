@@ -10,7 +10,7 @@ import (
 func Hex() *cli.Command {
 
 	const NAME = "hex"
-	var x = core.NewBase64()
+	var x = core.NewHex()
 
 	var e = cmd.Cmd(
 		"encode", "e", gUsageEnc(NAME), UsageText(NAME, "encode"), gDescEnc(NAME),

@@ -9,7 +9,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/inaneverb/ende/internal/pkg/bw"
+	"github.com/inaneverb/ende/internal/pkg/rw"
 )
 
 type R = io.Reader
@@ -32,8 +32,8 @@ type EnDe interface {
 // - Ensuring, that 2nd argument is filepath (if provided).
 func do(cCtx *cli.Context, act string, cb func(r R, w W) (R, W, error)) error {
 
-	var r R = os.Stdin
-	var w W = bw.NewBufferedWriter(os.Stdout)
+	var r R = rw.NewTrimSpacesReader(os.Stdin)
+	var w W = rw.NewBufferedWriter(os.Stdout)
 
 	var wFile bool
 
@@ -45,7 +45,7 @@ func do(cCtx *cli.Context, act string, cb func(r R, w W) (R, W, error)) error {
 	var retErrs []error
 
 	var args = cCtx.Args().Slice()
-	if n := len(args); n < 1 || n > 2 {
+	if n := len(args); n > 2 {
 		err = fmt.Errorf("%s: incorrect number of arguments: %d", act, n)
 		retErrs = append(retErrs, err)
 		goto EXIT
