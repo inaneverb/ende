@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"os"
 	"strings"
 
 	"github.com/urfave/cli/v2"
@@ -17,7 +16,7 @@ func Cmd(
 
 	var cmd = cli.Command{
 		Name: name, Usage: usage, UsageText: usageText, Flags: flags,
-		Description: strings.TrimSpace(desc), Action: wrapAct(act),
+		Description: strings.TrimSpace(desc), Action: act,
 	}
 
 	if alias != "" {
@@ -28,18 +27,4 @@ func Cmd(
 	}
 
 	return &cmd
-}
-
-// wrapAct wraps given cli.ActionFunc, returning a new one, that calls provided,
-// and writes a returned error to the stderr (if any), returning nil error.
-func wrapAct(cb cli.ActionFunc) cli.ActionFunc {
-	if cb == nil {
-		return nil
-	}
-	return func(cCtx *cli.Context) error {
-		if err := cb(cCtx); err != nil {
-			_, _ = os.Stderr.WriteString("error: " + err.Error())
-		}
-		return nil
-	}
 }

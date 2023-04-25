@@ -8,12 +8,14 @@ import (
 	"os"
 
 	"github.com/urfave/cli/v2"
+
+	"github.com/inaneverb/ende/internal/pkg/bw"
 )
 
 // do encapsulate the main preparation job. It parses given arguments
 // from cli.Context, prepares io.Reader, io.Writer to work with input and output
 // and calls 'cb' providing these streams. It uses 'act' to wrap any occurred
-// error.
+// error and writes all occurred errors to the stderr. Always returns nil.
 //
 // The parsing arguments process includes:
 // - Requiring 1 or 2 arguments,
@@ -23,22 +25,35 @@ import (
 func do(cCtx *cli.Context, act string, cb func(r R, w W) (R, W, error)) error {
 
 	var r R = os.Stdin
-	var w W = os.Stdout
+	var w W = bw.NewBufferedWriter(os.Stdout)
 
-	var args = cCtx.Args().Slice()
-	if n := len(args); n < 1 || n > 2 {
-		return fmt.Errorf("%s: incorrect number of arguments: %d", act, n)
-	}
+	var wFile bool
+
+	var r1 io.Reader
+	var w1 io.Writer
 
 	var f *os.File
 	var err error
+	var retErrs []error
+
+	var args = cCtx.Args().Slice()
+	if n := len(args); n < 1 || n > 2 {
+		err = fmt.Errorf("%s: incorrect number of arguments: %d", act, n)
+		retErrs = append(retErrs, err)
+		goto EXIT
+	}
 
 	if len(args) > 0 && args[0] != "--" {
-		switch f, err = stat(args[0]); {
+		f, err = stat(args[0])
+		switch {
 		case errors.Is(err, os.ErrInvalid):
 			r = bytes.NewBuffer([]byte(args[0]))
+
 		case err != nil:
-			return fmt.Errorf("%s: failed to open input: %w", act, err)
+			err = fmt.Errorf("%s: failed to open input: %w", act, err)
+			retErrs = append(retErrs, err)
+			goto EXIT
+
 		default:
 			r = f
 		}
@@ -46,35 +61,44 @@ func do(cCtx *cli.Context, act string, cb func(r R, w W) (R, W, error)) error {
 
 	if len(args) > 1 {
 		if f, err = stat(args[1]); err != nil {
-			return fmt.Errorf("%s: failed to open output: %w", act, err)
+			err = fmt.Errorf("%s: failed to open output: %w", act, err)
+			retErrs = append(retErrs, err)
+			goto EXIT
 		} else {
 			w = f
+			wFile = true
 		}
 	}
 
-	var r1 io.Reader
-	var w1 io.Writer
-
 	if r1, w1, err = cb(r, w); err != nil {
-		return fmt.Errorf("%s: %w", act, err)
+		retErrs = append(retErrs, fmt.Errorf("%s: %w", act, err))
+		goto EXIT
+	} else {
+		_, _ = fmt.Fprintf(w, "\n")
 	}
+
+EXIT:
 
 	for _, elem := range []struct {
 		Obj  any
 		Cond bool
 		What string
 	}{
-		{r, r != os.Stdin, "reader"},
-		{w, w != os.Stdout, "reader"},
+		{r, true, "reader"},
+		{w, wFile || len(retErrs) == 0, "writer"},
 		{r1, r1 != nil && r1 != r, "returned reader"},
 		{w1, w1 != nil && w1 != w, "returned writer"},
 	} {
 		if elem.Cond {
 			if err = cl(elem.Obj); err != nil {
-				const D = "%s: failed to close %s: %w"
-				return fmt.Errorf(D, act, elem.What, err)
+				err = fmt.Errorf("%s: failed to close %s: %w", act, elem.What, err)
+				retErrs = append(retErrs, err)
 			}
 		}
+	}
+
+	for i, n := 0, len(retErrs); i < n; i++ {
+		_, _ = fmt.Fprintf(os.Stderr, "error: %s\n", retErrs[i])
 	}
 
 	return nil
