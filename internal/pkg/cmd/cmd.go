@@ -17,6 +17,7 @@ func Cmd(
 	var cmd = cli.Command{
 		Name: name, Usage: usage, UsageText: usageText, Flags: flags,
 		Description: strings.TrimSpace(desc), Action: act,
+		HideHelpCommand: true,
 	}
 
 	if alias != "" {

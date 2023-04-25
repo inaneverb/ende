@@ -34,6 +34,7 @@ It allows you to work with stdin, stdout, or with a files.
 		CommandNotFound: func(cCtx *cli.Context, cmd string) {
 			_, _ = fmt.Fprintf(cCtx.App.Writer, "Thar be no '%q' here.\n", cmd)
 		},
+		HideHelpCommand: true,
 	}
 
 	_ = app.Run(os.Args)
