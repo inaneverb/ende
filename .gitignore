@@ -1,0 +1,10 @@
+.idea
+**/*_mock_test.go
+**/*.bindata.go
+**/*.gen.go
+# **/*.yml
+**/*.yaml
+!**/*.example.yml
+!**/*.example.yaml
+**/*.iml
+go.sum
